@@ -12,7 +12,7 @@ import android.util.LruCache;
 
 public class ImageCache {
 
-    private LruCache<String, Bitmap> mImageCahce;
+    private LruCache<String, Bitmap> mImageCache;
 
     public ImageCache() {
         initCache();
@@ -21,11 +21,19 @@ public class ImageCache {
     private void initCache() {
         long l = Runtime.getRuntime().maxMemory() / 1024;
         int maxMemory = (int) (l / 4);
-        mImageCahce = new LruCache<String, Bitmap>(maxMemory) {
+        mImageCache = new LruCache<String, Bitmap>(maxMemory) {
             @Override
             protected int sizeOf(String key, Bitmap value) {
                 return value.getRowBytes() * value.getHeight() / 1024;
             }
         };
+    }
+
+    public void putBitmap(String url, Bitmap bitmap) {
+        mImageCache.put(url, bitmap);
+    }
+
+    public Bitmap getBitmap(String url) {
+        return mImageCache.get(url);
     }
 }
