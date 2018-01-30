@@ -1,4 +1,4 @@
-package com.yaopaine.designpattern.srp.chapter2;
+package com.yaopaine.designpattern.ocp;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,51 +14,56 @@ import java.util.concurrent.Executors;
 /**
  * @Description
  * @AuthorCreated yaopaine
- * @Version 2.0
- * @Time 1/26/18
+ * @Version 1.0
+ * @Time 1/30/18
  */
 
-public class ImageLoader {
+public class ImageLoader2 {
 
-    private ImageCache mImageCache = new ImageCache();
+    private ImageCache2 mImageCache = new ImageCache();
     private ExecutorService mExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-    public ImageLoader() {
-
-    }
-
-    public void displayBitmap(final String url, final ImageView imageView) {
-        imageView.setTag(imageView.getId(), url);
+    public void displayImage(ImageView imageView, String url) {
         Bitmap bitmap = mImageCache.getBitmap(url);
         if (bitmap != null) {
             imageView.setImageBitmap(bitmap);
             return;
         }
+        //图片没有缓存，提交到线程池中下载图片
+        submitDownload(imageView, url);
+    }
+
+    private void submitDownload(final ImageView imageView, final String url) {
+        imageView.setTag(imageView.getId(), url);
         mExecutorService.submit(new Runnable() {
             @Override
             public void run() {
-                Bitmap downloadBitmap = downloadBitmap(url);
-                if (downloadBitmap == null) return;
-                mImageCache.putBitmap(url, downloadBitmap);
+                Bitmap bmp = downloadBitmap(url);
+                if (bmp == null) return;
                 if (url.equals(imageView.getTag(imageView.getId()))) {
-                    imageView.setImageBitmap(downloadBitmap);
+                    imageView.setImageBitmap(bmp);
                 }
             }
         });
     }
 
-    private Bitmap downloadBitmap(String imageUrl) {
+    public Bitmap downloadBitmap(String imageUrl) {
         try {
             URL url = new URL(imageUrl);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+//            HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
             Bitmap bitmap = BitmapFactory.decodeStream(urlConnection.getInputStream());
             urlConnection.disconnect();
             return bitmap;
         } catch (MalformedURLException e) {
-
+            e.printStackTrace();
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
         return null;
+    }
+
+    public void setImageCache(ImageCache2 imageCache) {
+        this.mImageCache = imageCache;
     }
 }
